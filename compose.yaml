@@ -1,0 +1,40 @@
+services:
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      # Only will build development stage from our dockerfile
+      target: ${ENVIRONMENT}
+    container_name: musicmind-v2
+    environment:
+      - PORT=${PORT}
+    volumes:
+      - .:/usr/src/app
+    env_file:
+    - .env
+    # Run a command against the development stage of the image
+    command: npm run start:${ENVIRONMENT}
+    ports:
+      - 3000:3000
+    depends_on:
+    - redis
+    - postgres
+  redis:
+    image: redis:alpine
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - musicmind-postgres:/var/lib/postgresql/data
+volumes:
+  redis:
+    driver: local
+  musicmind-postgres:

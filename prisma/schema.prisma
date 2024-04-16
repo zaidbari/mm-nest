@@ -1,0 +1,71 @@
+generator client {
+  provider        = "prisma-client-js" // The Prisma Client generator
+  previewFeatures = ["fullTextSearch"] // Enable the full-text search feature
+}
+
+datasource db {
+  provider = "postgresql" // or "mysql"
+  url      = env("DB_URL") // the connection string to your database
+}
+
+enum RoleType {
+  SUPERADMIN
+  ADMIN
+  USER
+  GUEST
+}
+
+// user can have one role
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  username  String    @unique
+  name      String
+  password  String
+  role      RoleType  @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime?
+}
+
+// Works like a category
+// Example: 
+// Department = "Elderly Care", "Child Care", "Mental Health", "Physical Health"
+// Institution = "Hospital", "Clinic", "Nursing Home", "Orphanage" etc
+// each department can have multiple institutions
+model Department {
+  id                   String                 @id @default(uuid())
+  name                 String                 @unique
+  createAt             DateTime               @default(now())
+  updateAt             DateTime               @updatedAt
+  institutions         Institution[]
+  containers           Container[]
+  DepartmentContainers DepartmentContainers[]
+}
+
+model Institution {
+  id           String     @id @default(uuid())
+  name         String     @unique
+  departmentId String
+  createAt     DateTime   @default(now())
+  updateAt     DateTime   @updatedAt
+  department   Department @relation(fields: [departmentId], references: [id])
+}
+
+model Container {
+  id                   String                 @id @default(uuid())
+  name                 String                 @unique
+  createAt             DateTime               @default(now())
+  updateAt             DateTime               @updatedAt
+  departments          Department[]
+  DepartmentContainers DepartmentContainers[]
+}
+
+model DepartmentContainers {
+  departmentId String
+  containerId  String
+  department   Department @relation(fields: [departmentId], references: [id])
+  container    Container  @relation(fields: [containerId], references: [id])
+
+  @@id([departmentId, containerId])
+}
